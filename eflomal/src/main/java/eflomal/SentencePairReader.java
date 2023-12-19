@@ -1,3 +1,5 @@
+package eflomal;
+
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -15,9 +17,12 @@ public class SentencePairReader {
     private Scanner stream2;
 
     /**
-     *  <a href="https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileSystemManager.html">...</a>
-     *  <a href="https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileObject.html">...</a>
-     *  <a href="https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileContent.html">...</a>
+     * <a href=
+     * "https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileSystemManager.html">...</a>
+     * <a href=
+     * "https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileObject.html">...</a>
+     * <a href=
+     * "https://commons.apache.org/proper/commons-vfs/commons-vfs2/apidocs/org/apache/commons/vfs2/FileContent.html">...</a>
      */
 
     public SentencePairReader(String relativePath) {
@@ -25,10 +30,11 @@ public class SentencePairReader {
     }
 
     /**
-     * Creates a new iterator object which reads sentence pairs from the given zip archive
+     * Creates a new iterator object which reads sentence pairs from the given zip
+     * archive
      *
      * @param relativePath -- the relative path to a word alignment data-set
-     * @param reversed -- whether the order should be revered in sentence pairs
+     * @param reversed     -- whether the order should be revered in sentence pairs
      */
     public SentencePairReader(String relativePath, boolean reversed) {
         this.fileName = relativePath;
@@ -39,7 +45,8 @@ public class SentencePairReader {
             // open it with a file system manager
             FileSystemManager fsManager = VFS.getManager();
             FileObject zipFile = fsManager.resolveFile("zip:" + filePath);
-            // store the two non-vocab children of this zip file, so they can be used for reading
+            // store the two non-vocab children of this zip file, so they can be used for
+            // reading
             FileObject[] fileObjects = zipFile.getChildren();
             for (FileObject fileObject : fileObjects) {
                 String name = fileObject.getName().getBaseName();

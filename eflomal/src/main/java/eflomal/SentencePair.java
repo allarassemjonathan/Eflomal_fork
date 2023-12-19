@@ -1,6 +1,9 @@
+package eflomal;
+
 public class SentencePair {
     private final Sentence first;
     private final Sentence second;
+
     public SentencePair(Sentence first, Sentence second) {
         this.first = first;
         this.second = second;

@@ -1,9 +1,12 @@
+package eflomal;
+
 import java.util.Scanner;
 import java.util.ArrayList;
 
 public class Sentence {
     public final int NULL_WORD = 0;
     private final ArrayList<Integer> tokens;
+
     public Sentence(String text) {
         tokens = new ArrayList<>();
         tokens.add(NULL_WORD); // begin all sentences with the null word
@@ -34,11 +37,11 @@ public class Sentence {
             return "Sentence<NULL>";
         }
         StringBuilder sb = new StringBuilder("Sentence<");
-        for (int i = 0; i < tokens.size()-1; i++) {
+        for (int i = 0; i < tokens.size() - 1; i++) {
             sb.append(tokens.get(i));
             sb.append(' ');
         }
-        sb.append(tokens.getLast());
+        sb.append((tokens).get(tokens.size() - 1));
         return String.format(sb.toString());
     }
 }

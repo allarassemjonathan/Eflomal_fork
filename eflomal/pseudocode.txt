@@ -1,0 +1,116 @@
+// The null word is an implied source word in every sentence conventionally word 0
+NULL_WORD  = 0
+NULL_LINK  = 0xFFFF
+NULL_PRIOR = ???? /* check the paper it's a command line argument */
+NULL_ALPHA = 0.001
+LEX_ALPHA  = 0.001
+
+/* 
+ * There is one links array per src-tgt sentence pair
+ * 
+ * Each links array is of the same length as the target sentence
+ * 
+ * Let i be a sentence pair index in the translation corpus
+ * Let j be the index of a word in the target sentence of that pair
+ * links[i][j] is the index of the word in the source sentece of that pair
+ *             which is responsible for the presence of word j
+ * 
+ */
+links = new Vector<Vector<uint16>>()
+  // TODO: find thot equivalent -- check IBM2
+  // TODO: initialize this data structure with random VALID links
+           (text_alignment_randomize -> random_uint32_biased)
+
+/* 
+ * There is one entry for every non-zero mapping from a source word to its 
+ * consequential target word. All missing entries are assumed to be 0.
+ * 
+ * An entry of 57 at index Pair(66, 42) means that the word represented by  
+ * the word token 66 is attributed to the word represented by the word token 
+ * 42 a total of 57 times accross the corpus.
+ * 
+ */
+counts = new Map<Pair<target, source>, counts>()
+counts = new Map<Pair<uint32, uint32>, uint32>()
+counts = new Map<target, Map<source, counts>> # Consider this one if probability norm is important
+  // TODO: find thot equivalent (closest to IBM1AlignmentModel::lexCounts but not same)
+  // TODO: research initialization of this data structure
+
+/*
+ * Dirichlet represents the current estimates of the dirichlet priors in the model 
+ * 
+ * dirichlet[t] gives the estimated distribution of source word tokens 
+ *              for the target word token t.
+ * 
+ * A value of dirichlet[t][s] is the probability that s is the cause of t
+ * 
+ * If dirichlet[t][s] is not present because s is not in the map, the value of 
+ * this entry is assumed to be some small base probability (eflomal: LEX_ALPHA)
+ * 
+ */
+dirichlet = Vector<Map<uint32, float>>
+  // TODO: identify a good choice of default value in the paper
+
+/*
+ * priors[t] is a map from source word tokens to probabilities
+ * 
+ * priors[t][s] is the probability that t is caused by s
+ * 
+ */
+priors = new Vector<Map<source,probability>>()
+priors = new Vector<Map<uint32,float>>()
+
+for Sentences S,T in sentence pair corpus:
+  for WordToken j,t in enumerate(T):
+    // get the word index in the source sentence that previously mapped to this word
+    old_i = links[t][j]
+    // get that word token from the source sentence
+    old_s = S[old_i] if old_i != NULL else NULL_WORD
+    // decrease the count and dirichlet prior of the word old_s
+    counts[Pair(t, old_s)]--
+    dirichlet[t][old_s] = 1.0 / (1.0 / dirichlet[t][old_s] - 1.0)
+    // if counts reaches 0 clear these entries for RAM
+    if counts[Pair(t, old_s)] <= 0
+      counts.remove(Pair(t, old_s))
+      dirichlet[t].remove(old_s)
+    
+    // update probabilities assuming this pair is unmapped
+    ps_sum = 0.0
+    ps = Vector<float>() // one entry per word in source sentence + 1
+    for WordToken i,s in enumerate(S)
+      // get the number of times that t is caused by s
+      n = counts[Pair(t,s)]
+      // get the prior count of t caused by s
+      if (priors != NULL)
+        alpha = priors[t][s] + LEX_ALPHA
+      else
+        alpha = LEX_ALPHA
+      // multiply the estimated probabilities (dirichlet) by the counts to get quality
+      ps_sum += dirichlet[t][s] * (alpha + n)
+      // add this number to the cumulative probability distribution
+      ps[i] = ps_sum
+      // include null word in the sum
+      ps_sum = NULL_PRIOR * dirichlet[t][NULL_WORD] * 
+               (NULL_ALPHA + counts[Pair(t, NULL_WORD)])
+    ps[S.length] = ps_sum
+
+    // determine based on ps_sum which source token caused the target token
+    
+    // select a new_i to replace old_i
+    if (!argmax)
+      // the probability of any i is proportional to its probability in ps
+      new_i = random_categorical_from_cumulative(ps)
+    else
+      // whichever i is most probable based on ps will be chosen
+      new_i = max_categorical_from_cumulative(ps)
+    // identify the word token that goes with this sentence index
+    if new_i < S.length
+      new_s = S[new_i]
+      links[j] = new_i
+    else
+      new_s = NULL_WORD
+      links[j] = NULL_LINK
+
+    // increase the count and dirichlet variables to reflect the new i and s
+    counts[t][new_s]++
+    dirichlet[t][new_s] = 1.0 / (1.0 / dirichlet[t][new_s] + 1.0)
